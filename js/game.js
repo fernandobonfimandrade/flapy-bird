@@ -177,7 +177,7 @@ function criarCanos(){
             if(passou100Frames){
                 this.pares.push({
                     x: canvas.width,
-                    y: -180 * (Math.random() + 1),
+                    y: -130 * (Math.random() + 1),
                 })
             }
 
