@@ -128,7 +128,9 @@ function criarCanos(){
         espacamentoEntreCanos: 90,
         pares: [],
         colisaoComPlappyBird(par){
-            if(globais.flappyBird.destinationX + globais.flappyBird.spriteWidth >= par.x){ 
+            if(globais.flappyBird.destinationX + globais.flappyBird.spriteWidth >= par.x && 
+                globais.flappyBird.destinationX <= par.x + this.spriteWidth
+                ){ 
                 if(globais.flappyBird.destinationY <= par.y + this.spriteHeight){
                     return true;
                 }
