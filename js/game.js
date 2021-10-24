@@ -62,17 +62,19 @@ function criaFlappyBird(){
                 this.spriteWidth,this.spriteHeight);
         },
         atualiza(){
-            if(fazColizao(this, globais.chao, 'y')){
-                this.vivo = false;
-                som_hit.play();
-                setTimeout(() => {
-                    mudaParaTela(Telas.INICIO);
-                }, 500);
-                return;
+            if(globais.flappyBird.vivo){
+                if(fazColizao(this, globais.chao, 'y')){
+                    this.vivo = false;
+                    som_hit.play();
+                    setTimeout(() => {
+                        mudaParaTela(Telas.GAME_OVER);
+                    }, 500);
+                    return;
+                }
+    
+                this.velocidade += this.gravidade;
+                this.destinationY += this.velocidade;
             }
-
-            this.velocidade += this.gravidade;
-            this.destinationY += this.velocidade;
         }
     }
     return flappyBird;
@@ -87,11 +89,13 @@ function criaChao(){
         destinationX: 0, 
         destinationY: canvas.height - 112,
         atualiza(){
-            const movimentoDoChao = 2;
-            const repeteEm = this.spriteWidth/2;
-            const movimentacao = this.destinationX - movimentoDoChao;
-
-            this.destinationX = movimentacao % repeteEm;
+            if(globais.flappyBird.vivo){
+                const movimentoDoChao = 2;
+                const repeteEm = this.spriteWidth/2;
+                const movimentacao = this.destinationX - movimentoDoChao;
+    
+                this.destinationX = movimentacao % repeteEm;
+            }
         },
         desenha(){
             contexto.drawImage(
@@ -179,19 +183,22 @@ function criarCanos(){
 
             const el = this;
             canos.pares.forEach(function(par){
-                par.x += -2; 
-
-                if(el.colisaoComPlappyBird(par)){
-                    this.vivo = false;
-                    som_hit.play();
-                    setTimeout(() => {
-                        mudaParaTela(Telas.INICIO);
-                    }, 500);
-                    return;
-                }
-
-                if(par.x <= - el.spriteWidth){
-                    el.pares.shift();
+                if(globais.flappyBird.vivo){
+                    par.x += -2; 
+    
+                    if(el.colisaoComPlappyBird(par)){
+                        globais.flappyBird.vivo = false;
+                        som_hit.play();
+                        setTimeout(() => {
+                            mudaParaTela(Telas.GAME_OVER);
+                        }, 500);
+                        return;
+                    }
+    
+                    if(par.x <= - el.spriteWidth){
+                        el.pares.shift();
+                        globais.placar.atualiza();
+                    }
                 }
             });
         }
@@ -210,11 +217,13 @@ function criaPlanoDeFundo(){
         destinationX: 0, 
         destinationY: canvas.height - 204,
         atualiza(){
-            const movimentoDoPlanoDeFundo = .1;
-            const repeteEm = this.spriteWidth/2;
-            const movimentacao = this.destinationX - movimentoDoPlanoDeFundo;
-
-            this.destinationX = movimentacao % repeteEm;
+            if(globais.flappyBird.vivo){
+                const movimentoDoPlanoDeFundo = .1;
+                const repeteEm = this.spriteWidth/2;
+                const movimentacao = this.destinationX - movimentoDoPlanoDeFundo;
+    
+                this.destinationX = movimentacao % repeteEm;
+            }
         },
         desenha(){
             contexto.fillStyle = '#70c5ce';
@@ -239,6 +248,24 @@ function criaPlanoDeFundo(){
     return planoDeFundo;
 }
 
+function criaPlacar(){
+    const placar = {
+        pontuacao: 0,
+        desenha(){
+            contexto.font = '30px "VT323"';
+            contexto.fillStyle = 'white';
+            contexto.textAlign = 'right';
+            contexto.fillText(this.pontuacao, canvas.width - 10,30);
+        },
+        atualiza(){
+                this.pontuacao += 1;
+        },
+    }
+    return placar;
+}
+
+
+
 const mensagemGetReady = {
     spriteX: 134, 
     spriteY: 0, 
@@ -254,6 +281,82 @@ const mensagemGetReady = {
             this.destinationX, this.destinationY,
             this.spriteWidth, this.spriteHeight,
         );
+    }
+}
+const mensagemGameOver = {
+    spriteX: 134, 
+    spriteY: 153, 
+    spriteWidth: 226, 
+    spriteHeight: 200, 
+    destinationX: (canvas.width/2) - (226/2), 
+    destinationY: 50,
+    desenha(){
+        // desenha fundoPlacar
+        contexto.drawImage(
+            sprites,
+            this.spriteX, this.spriteY,
+            this.spriteWidth, this.spriteHeight,
+            this.destinationX, this.destinationY,
+            this.spriteWidth, this.spriteHeight,
+        );
+        // desenha medalha
+        const medalhas = [{
+            spriteX: 0, 
+            spriteY: 78, 
+            spriteWidth: 44, 
+            spriteHeight: 44, 
+            destinationX: (canvas.width/2) - ((226/2)-26), 
+            destinationY: 136,
+        },{
+            spriteX: 48, 
+            spriteY: 78, 
+            spriteWidth: 44, 
+            spriteHeight: 44, 
+            destinationX: (canvas.width/2) - ((226/2)-26), 
+            destinationY: 136,
+        },{
+            spriteX: 48, 
+            spriteY: 124, 
+            spriteWidth: 44, 
+            spriteHeight: 44, 
+            destinationX: (canvas.width/2) - ((226/2)-26), 
+            destinationY: 136,
+        },{
+            spriteX: 0, 
+            spriteY: 124, 
+            spriteWidth: 44, 
+            spriteHeight: 44, 
+            destinationX: (canvas.width/2) - ((226/2)-26), 
+            destinationY: 136,
+        }]
+
+        const medalha = parseInt(globais.placar.pontuacao/10);
+
+        contexto.drawImage(
+            sprites,
+            medalhas[medalha].spriteX, medalhas[medalha].spriteY,
+            medalhas[medalha].spriteWidth, medalhas[medalha].spriteHeight,
+            medalhas[medalha].destinationX, medalhas[medalha].destinationY,
+            medalhas[medalha].spriteWidth, medalhas[medalha].spriteHeight,
+        );
+
+
+        contexto.font = '30px "VT323"';
+        contexto.fillStyle = '#533847';
+        contexto.textAlign = 'right';
+        contexto.fillText(globais.placar.pontuacao, (canvas.width/2) - ((226/2)-200) ,147);
+
+        const best = window.localStorage.getItem('best') || 0;
+        if(globais.placar.pontuacao > best){
+            window.localStorage.setItem('best', globais.placar.pontuacao);
+        }
+
+        
+        contexto.font = '30px "VT323"';
+        contexto.fillStyle = '#533847';
+        contexto.textAlign = 'right';
+        contexto.fillText(best, (canvas.width/2) - ((226/2)-200) ,187);
+
     }
 }
 
@@ -273,6 +376,10 @@ const globais = {
         atualiza: {},
     },
     canos: {
+        desenha: {},
+        atualiza: {},
+    },
+    placar: {
         desenha: {},
         atualiza: {},
     },
@@ -296,8 +403,8 @@ const Telas = {
         inicializa(){
             frames = 0;
             globais.planoDeFundo = criaPlanoDeFundo();
-            globais.chao = criaChao();
             globais.flappyBird = criaFlappyBird();
+            globais.chao = criaChao();
             globais.canos = criarCanos();
         },
         desenha(){
@@ -315,13 +422,14 @@ const Telas = {
     },
     JOGO:{
         inicializa(){
-
+            globais.placar = criaPlacar();
         },
         desenha(){
             globais.planoDeFundo.desenha();
-            globais.flappyBird.desenha();
             globais.canos.desenha();
+            globais.flappyBird.desenha();
             globais.chao.desenha();
+            globais.placar.desenha();
         },
         click(){
             globais.flappyBird.pular();
@@ -331,6 +439,22 @@ const Telas = {
             globais.planoDeFundo.atualiza();
             globais.chao.atualiza();
             globais.canos.atualiza();
+        }
+    },
+    GAME_OVER:{
+        inicializa(){
+        },
+        desenha(){
+            globais.planoDeFundo.desenha();
+            globais.canos.desenha();
+            globais.chao.desenha();
+            globais.flappyBird.desenha();
+            mensagemGameOver.desenha();
+        },
+        click(){
+            mudaParaTela(Telas.INICIO);
+        },
+        atualiza(){
         }
     }
 }
